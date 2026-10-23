@@ -41,3 +41,10 @@ export type Group = {
   name: string;
   invite_code: string;
 };
+
+// One slice of the wheel from wheel_slices(): no url, no title.
+export type WheelSlice = {
+  id: number;
+  added_by: string;
+  created_at: string;
+};

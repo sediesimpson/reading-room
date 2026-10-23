@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { createClient } from "@/lib/supabase";
 import { timeLabel, todayIso, todayLabel } from "@/lib/dates";
-import type { DailyPick, Group, Link, Profile, Read } from "@/lib/types";
+import type { DailyPick, Group, Link, Profile, Read, WheelSlice } from "@/lib/types";
 import AddLinkForm from "@/components/AddLinkForm";
 import GroupSetup from "@/components/GroupSetup";
 import InviteBox from "@/components/InviteBox";
@@ -27,6 +27,9 @@ function useToday() {
 }
 
 type PageData = {
+  // Every link in your room, as a bare slice (no url or title).
+  wheel: WheelSlice[];
+  // Full details, but only for your own links and links that have been picked.
   links: Link[];
   picks: DailyPick[];
   reads: Read[];
@@ -44,15 +47,16 @@ type PageData = {
 // The database's rules only ever send back rows from your own room.
 async function fetchPageData(): Promise<PageData> {
   const supabase = createClient();
-  const [claims, links, picks, reads, profiles, groups] = await Promise.all([
+  const [claims, wheel, links, picks, reads, profiles, groups] = await Promise.all([
     supabase.auth.getClaims(),
+    supabase.rpc("wheel_slices"),
     supabase.from("links").select("*").order("created_at"),
     supabase.from("daily_picks").select("*"),
     supabase.from("reads").select("*"),
     supabase.from("profiles").select("*"),
     supabase.from("groups").select("*"),
   ]);
-  for (const result of [links, picks, reads, profiles, groups]) {
+  for (const result of [wheel, links, picks, reads, profiles, groups]) {
     if (result.error) throw result.error;
   }
   const me = claims.data?.claims.sub;
@@ -60,6 +64,7 @@ async function fetchPageData(): Promise<PageData> {
 
   const myProfile = profiles.data!.find((profile) => profile.user_id === me) ?? null;
   return {
+    wheel: wheel.data!,
     links: links.data!,
     picks: picks.data!,
     reads: reads.data!,
@@ -79,11 +84,11 @@ function readCount(reads: Read[], linkId: number) {
 
 // The wheel holds every link that not everyone has read yet.
 // Today's pick always stays on, so the small wheel can stop on it.
-function linksOnWheel({ links, picks, reads, members, today }: PageData) {
+function linksOnWheel({ wheel, picks, reads, members, today }: PageData) {
   const todayPick = picks.find((pick) => pick.pick_date === today);
   const everyone = Math.max(members.length, 1);
-  return links.filter(
-    (link) => link.id === todayPick?.link_id || readCount(reads, link.id) < everyone
+  return wheel.filter(
+    (slice) => slice.id === todayPick?.link_id || readCount(reads, slice.id) < everyone
   );
 }
 
@@ -118,8 +123,11 @@ export default function Home() {
     id: link.id,
     color: link.added_by === me ? "var(--color-accent)" : "var(--color-friend)",
   }));
-  const myLinks = wheelLinks.filter((link) => link.added_by === me);
-  const fromMe = myLinks.length;
+  // Your own links on the wheel, with their full details for the list.
+  const onWheel = new Set(wheelLinks.map((slice) => slice.id));
+  const myLinks =
+    data?.links.filter((link) => link.added_by === me && onWheel.has(link.id)) ?? [];
+  const fromMe = wheelLinks.filter((slice) => slice.added_by === me).length;
   // Links that have been picked on any day can't be edited or deleted.
   const pickedIds = new Set(data?.picks.map((pick) => pick.link_id));
   const fromOthers = wheelLinks.length - fromMe;
