@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase";
 import { timeLabel, todayIso, todayLabel } from "@/lib/dates";
 import type { DailyPick, Link, Profile, Read } from "@/lib/types";
 import AddLinkForm from "@/components/AddLinkForm";
+import NamePrompt from "@/components/NamePrompt";
 import TodayCard from "@/components/TodayCard";
 import Wheel, { landingAngle, type Slice } from "@/components/Wheel";
 
@@ -153,6 +154,11 @@ export default function Home() {
       return;
     }
     loadData();
+  }
+
+  // First visit: ask for a name before anything else.
+  if (data && !data.profiles.some((profile) => profile.user_id === me)) {
+    return <NamePrompt onSaved={loadData} />;
   }
 
   // Two states: no pick yet (big wheel and spin), or a pick (article first).

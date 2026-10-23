@@ -1,15 +1,19 @@
--- Step 7: your names. Run after 06_login.sql.
--- Paste into the Supabase SQL editor, then replace the placeholders THERE.
--- Don't save real email addresses in this file: the repo is public.
+-- Step 7: let each of you set your own display name from the app.
+-- Paste into the Supabase SQL editor and run, after 06_login.sql.
 
-insert into profiles (user_id, display_name)
-select id, 'YOUR NAME' from auth.users where email = 'YOUR EMAIL';
+-- A new profile belongs to whoever is logged in...
+alter table profiles alter column user_id set default auth.uid();
 
-insert into profiles (user_id, display_name)
-select id, 'FRIEND NAME' from auth.users where email = 'FRIEND EMAIL';
+-- ...and you can only create or rename your own.
+create policy "you can add your own profile" on profiles
+  for insert to authenticated with check (user_id = auth.uid());
+create policy "you can rename yourself" on profiles
+  for update to authenticated using (user_id = auth.uid());
+grant insert, update on profiles to authenticated;
 
 -- Optional: links and reads from before login have nobody attached.
--- To make them yours, remove the "--" from the next two lines and add your email.
--- (If the second one complains about "reads_once_each", run dev_reset.sql instead.)
--- update links set added_by = (select id from auth.users where email = 'YOUR EMAIL') where added_by is null;
--- update reads set user_id = (select id from auth.users where email = 'YOUR EMAIL') where user_id is null;
+-- These give them to the first account created (you, if you added yourself first).
+-- Remove the "--" to run them. If the second complains about "reads_once_each",
+-- run dev_reset.sql instead.
+-- update links set added_by = (select id from auth.users order by created_at limit 1) where added_by is null;
+-- update reads set user_id = (select id from auth.users order by created_at limit 1) where user_id is null;

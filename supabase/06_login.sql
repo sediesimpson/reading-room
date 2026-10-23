@@ -1,6 +1,5 @@
 -- Step 7: login. Names for the two of you, and every row knows who made it.
--- Paste into the Supabase SQL editor and run, AFTER creating both users
--- (Authentication -> Users -> Add user).
+-- Paste into the Supabase SQL editor and run.
 
 -- Display names, so the page says "from sam", not an email address.
 create table profiles (
