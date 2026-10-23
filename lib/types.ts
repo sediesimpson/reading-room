@@ -2,6 +2,9 @@
 export type Link = {
   id: number;
   url: string;
+  title: string | null;
+  description: string | null;
+  image: string | null;
   created_at: string;
 };
 

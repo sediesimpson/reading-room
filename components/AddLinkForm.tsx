@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase";
+import type { LinkDetails } from "@/app/api/fetch-title/route";
 
 // Returns the cleaned-up url, or null if it isn't a real web link.
 // Cleaning up means the same article always saves as the same text,
@@ -25,6 +26,18 @@ function checkUrl(text: string): string | null {
   }
 }
 
+// Asks our own server route for the article's title, description and image.
+// If that fails, the link is still worth saving without them.
+async function fetchDetails(url: string): Promise<LinkDetails> {
+  try {
+    const response = await fetch(`/api/fetch-title?url=${encodeURIComponent(url)}`);
+    if (response.ok) return await response.json();
+  } catch {
+    // Fall through to no details.
+  }
+  return { title: null, description: null, image: null };
+}
+
 export default function AddLinkForm({ onAdded }: { onAdded: () => void }) {
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +53,10 @@ export default function AddLinkForm({ onAdded }: { onAdded: () => void }) {
 
     setSaving(true);
     setError(null);
-    const { error } = await createClient().from("links").insert({ url });
+    const { title, description, image } = await fetchDetails(url);
+    const { error } = await createClient()
+      .from("links")
+      .insert({ url, title, description, image });
     setSaving(false);
 
     // 23505 is Postgres saying "this would break a unique rule".

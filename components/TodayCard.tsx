@@ -27,10 +27,13 @@ export default function TodayCard({
   return (
     <article className="rounded-card border border-line p-6 sm:p-8">
       <p className="text-sm text-muted">{publication}</p>
-      {/* Until step 6 fetches real titles, the url stands in for one. */}
+      {/* If the site didn't share a title, the url stands in for one. */}
       <h2 className="mt-2 break-words text-2xl font-semibold leading-snug">
-        {link.url.replace(/^https?:\/\/(www\.)?/, "")}
+        {link.title ?? link.url.replace(/^https?:\/\/(www\.)?/, "")}
       </h2>
+      {link.description && (
+        <p className="mt-3 leading-relaxed text-muted">{link.description}</p>
+      )}
 
       <div className="mt-6 flex flex-wrap gap-3">
         <a
