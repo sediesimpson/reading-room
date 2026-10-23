@@ -5,21 +5,24 @@ function publicationOf(url: string) {
   return new URL(url).hostname.replace(/^www\./, "");
 }
 
-function readLine(readCount: number) {
-  if (readCount >= 2) return "you've both read it";
-  if (readCount === 1) return "1 of you has read it";
+function readLine(readByMe: boolean, readByFriend: boolean, friendName: string) {
+  if (readByMe && readByFriend) return "you've both read it";
+  if (readByMe) return `you've read it. waiting on ${friendName}.`;
+  if (readByFriend) return `${friendName} has read it`;
   return "nobody has read it yet";
 }
 
 export default function TodayCard({
   link,
-  readCount,
-  markedHere,
+  readByMe,
+  readByFriend,
+  friendName,
   onMarkRead,
 }: {
   link: Link;
-  readCount: number;
-  markedHere: boolean;
+  readByMe: boolean;
+  readByFriend: boolean;
+  friendName: string;
   onMarkRead: () => void;
 }) {
   const publication = publicationOf(link.url);
@@ -46,14 +49,14 @@ export default function TodayCard({
         </a>
         <button
           onClick={onMarkRead}
-          disabled={markedHere}
+          disabled={readByMe}
           className="rounded-card border border-ink px-6 py-3 font-medium disabled:border-line disabled:text-muted"
         >
-          {markedHere ? "marked as read" : "mark as read"}
+          {readByMe ? "marked as read" : "mark as read"}
         </button>
       </div>
 
-      <p className="mt-4 text-sm text-muted">{readLine(readCount)}</p>
+      <p className="mt-4 text-sm text-muted">{readLine(readByMe, readByFriend, friendName)}</p>
     </article>
   );
 }

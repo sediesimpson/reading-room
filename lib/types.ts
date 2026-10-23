@@ -5,6 +5,7 @@ export type Link = {
   title: string | null;
   description: string | null;
   image: string | null;
+  added_by: string | null;
   created_at: string;
 };
 
@@ -14,6 +15,7 @@ export type DailyPick = {
   link_id: number;
   pick_date: string;
   spun_at: string;
+  spun_by: string | null;
 };
 
 // One row of the reads table: someone marked a link as read.
@@ -22,4 +24,10 @@ export type Read = {
   link_id: number;
   user_id: string | null;
   read_at: string;
+};
+
+// One row of the profiles table: a display name for each of you.
+export type Profile = {
+  user_id: string;
+  display_name: string;
 };

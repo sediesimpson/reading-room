@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { createClient } from "@/lib/supabase";
 import { timeLabel, todayIso, todayLabel } from "@/lib/dates";
-import type { DailyPick, Link, Read } from "@/lib/types";
+import type { DailyPick, Link, Profile, Read } from "@/lib/types";
 import AddLinkForm from "@/components/AddLinkForm";
 import TodayCard from "@/components/TodayCard";
 import Wheel, { landingAngle, type Slice } from "@/components/Wheel";
@@ -22,51 +22,39 @@ function useToday() {
   );
 }
 
-// Until login (step 7), this browser remembers which links it marked as
-// read, so one person can't count twice.
-function markedInThisBrowser(linkId: number) {
-  try {
-    return localStorage.getItem(`read-${linkId}`) === "yes";
-  } catch {
-    return false;
-  }
-}
-function rememberMarked(linkId: number) {
-  try {
-    localStorage.setItem(`read-${linkId}`, "yes");
-  } catch {
-    // Private windows can block storage; the read is still saved.
-  }
-}
-
 type PageData = {
   links: Link[];
   picks: DailyPick[];
   reads: Read[];
+  profiles: Profile[];
   today: string;
-  markedHere: boolean;
+  // The logged-in user's id.
+  me: string;
 };
 
-// Fetches every link, pick and read at once.
+// Fetches who's logged in, plus every link, pick, read and name at once.
 async function fetchPageData(): Promise<PageData> {
   const supabase = createClient();
-  const [links, picks, reads] = await Promise.all([
+  const [claims, links, picks, reads, profiles] = await Promise.all([
+    supabase.auth.getClaims(),
     supabase.from("links").select("*").order("created_at"),
     supabase.from("daily_picks").select("*"),
     supabase.from("reads").select("*"),
+    supabase.from("profiles").select("*"),
   ]);
-  if (links.error) throw links.error;
-  if (picks.error) throw picks.error;
-  if (reads.error) throw reads.error;
+  for (const result of [links, picks, reads, profiles]) {
+    if (result.error) throw result.error;
+  }
+  const me = claims.data?.claims.sub;
+  if (!me) throw new Error("you're not logged in");
 
-  const today = todayIso();
-  const todayPick = picks.data.find((pick) => pick.pick_date === today);
   return {
-    links: links.data,
-    picks: picks.data,
-    reads: reads.data,
-    today,
-    markedHere: todayPick ? markedInThisBrowser(todayPick.link_id) : false,
+    links: links.data!,
+    picks: picks.data!,
+    reads: reads.data!,
+    profiles: profiles.data!,
+    today: todayIso(),
+    me,
   };
 }
 
@@ -106,11 +94,22 @@ export default function Home() {
   const pickedLink = data?.links.find((link) => link.id === todayPick?.link_id);
   const winnerIndex = wheelLinks.findIndex((link) => link.id === todayPick?.link_id);
 
-  // For now every slice is pale blue. Step 7 colours them by who added them.
+  const me = data?.me;
+  const friendName =
+    data?.profiles.find((profile) => profile.user_id !== me)?.display_name ?? "your friend";
+
+  // Your slices are pale blue, your friend's are green.
   const slices: Slice[] = wheelLinks.map((link) => ({
     id: link.id,
-    color: "var(--color-accent)",
+    color: link.added_by === me ? "var(--color-accent)" : "var(--color-friend)",
   }));
+  const fromMe = wheelLinks.filter((link) => link.added_by === me).length;
+  const fromFriend = wheelLinks.length - fromMe;
+
+  // Who has read today's pick.
+  const todayReads = data?.reads.filter((read) => read.link_id === todayPick?.link_id) ?? [];
+  const readByMe = todayReads.some((read) => read.user_id === me);
+  const readByFriend = todayReads.some((read) => read.user_id && read.user_id !== me);
 
   // Mid-spin, the wheel heads for spinTo. Otherwise it rests on today's pick
   // (the same spot, minus the extra full turns, so nothing visibly moves).
@@ -146,12 +145,13 @@ export default function Home() {
 
   async function handleMarkRead() {
     if (!pickedLink) return;
+    // user_id fills itself in with whoever is logged in.
     const { error } = await createClient().from("reads").insert({ link_id: pickedLink.id });
-    if (error) {
+    // 23505: you'd already marked it (perhaps in another tab). That's fine.
+    if (error && error.code !== "23505") {
       setError(`couldn't mark it as read: ${error.message}`);
       return;
     }
-    rememberMarked(pickedLink.id);
     loadData();
   }
 
@@ -170,8 +170,9 @@ export default function Home() {
           <div className="mt-6">
             <TodayCard
               link={pickedLink}
-              readCount={readCount(data.reads, pickedLink.id)}
-              markedHere={data.markedHere}
+              readByMe={readByMe}
+              readByFriend={readByFriend}
+              friendName={friendName}
               onMarkRead={handleMarkRead}
             />
           </div>
@@ -201,7 +202,7 @@ export default function Home() {
                 ? error
                   ? " "
                   : "loading…"
-                : `${slices.length} ${slices.length === 1 ? "link" : "links"} in the wheel`}
+                : `${slices.length} ${slices.length === 1 ? "link" : "links"}: ${fromMe} from you, ${fromFriend} from ${friendName}`}
             </p>
           </section>
 

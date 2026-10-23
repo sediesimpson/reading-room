@@ -1,4 +1,5 @@
 import Link from "next/link";
+import LogoutButton from "@/components/LogoutButton";
 
 export default function Header() {
   return (
@@ -14,6 +15,7 @@ export default function Header() {
         <Link href="/past-reads" className="hover:text-ink">
           past reads
         </Link>
+        <LogoutButton />
       </nav>
     </header>
   );
