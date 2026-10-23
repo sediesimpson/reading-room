@@ -2,6 +2,8 @@
 
 a shared reading wheel for you and your friends. everyone in a room adds links, and each day a wheel picks one article for the whole room to read.
 
+**try it at [read.sedinam.com](https://read.sedinam.com).** sign up with your email, start a room and send the invite link to a friend.
+
 - each link is one slice of the wheel. your own links are pale blue and everyone else's are green, however many people are in the room.
 - you can't see other people's titles until their link is picked.
 - the first person to open the app each day spins. the pick is locked for everyone until tomorrow.
@@ -64,3 +66,9 @@ the rules about who can see what live in the database, not in the page:
 - **rooms:** row level security limits every table to your own room.
 - **secret titles:** other people's unpicked links come back only as bare slices, from `wheel_slices()`, with no url or title.
 - **the daily pick:** `spin()` runs in the database, and a unique rule allows one pick per room per day. if two people spin at once, only one pick is saved and both see it.
+
+## how this was made
+
+this app was built entirely by prompting [claude code](https://claude.com/claude-code). i didn't write any of the code by hand. it was a test of my prompting: how far a clear plan and good direction can take a real, deployed app.
+
+i wrote the build plan and the design, then worked through it one step at a time: deciding what to build, reviewing each change, testing it in the browser, and redirecting when something wasn't right. some of the bigger decisions came out of that back-and-forth, like switching from a two-person allowlist to rooms anyone can start.
