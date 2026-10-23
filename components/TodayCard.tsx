@@ -1,10 +1,6 @@
+import { publicationOf } from "@/lib/links";
 import { listNames } from "@/lib/names";
 import type { Link } from "@/lib/types";
-
-// "www.theguardian.com" -> "theguardian.com"
-function publicationOf(url: string) {
-  return new URL(url).hostname.replace(/^www\./, "");
-}
 
 function readLine(readByMe: boolean, othersRead: string[], othersWaiting: string[]) {
   if (readByMe && othersWaiting.length === 0) {

@@ -33,3 +33,8 @@ export async function fetchDetails(url: string): Promise<LinkDetails> {
   }
   return { title: null, description: null, image: null };
 }
+
+// "https://www.theguardian.com/..." -> "theguardian.com"
+export function publicationOf(url: string) {
+  return new URL(url).hostname.replace(/^www\./, "");
+}

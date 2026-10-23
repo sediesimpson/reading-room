@@ -25,3 +25,17 @@ export function timeLabel(timestamp: string) {
     timeZone: TIME_ZONE,
   }).format(new Date(timestamp));
 }
+
+// e.g. "thursday 22 october" for a pick_date like "2026-10-22".
+// The year is added when it isn't this year.
+export function pickDateLabel(pickDate: string, today: string) {
+  // Midday UTC, so the date can't slip to the day before or after.
+  const date = new Date(`${pickDate}T12:00:00Z`);
+  return new Intl.DateTimeFormat("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: pickDate.slice(0, 4) === today.slice(0, 4) ? undefined : "numeric",
+    timeZone: TIME_ZONE,
+  }).format(date);
+}

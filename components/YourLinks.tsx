@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase";
-import { checkUrl, fetchDetails } from "@/lib/links";
+import { checkUrl, fetchDetails, publicationOf } from "@/lib/links";
 import type { Link } from "@/lib/types";
 
 // Shown when the database refuses a change (it checks the same rules again).
@@ -108,7 +108,7 @@ function LinkRow({
     <li className="flex items-start justify-between gap-4 py-4">
       <div className="min-w-0">
         <p className="truncate font-medium">{link.title ?? link.url}</p>
-        <p className="truncate text-sm text-muted">{new URL(link.url).hostname.replace(/^www\./, "")}</p>
+        <p className="truncate text-sm text-muted">{publicationOf(link.url)}</p>
         {error && <p className="mt-1 text-sm text-muted">{error}</p>}
       </div>
       <div className="flex shrink-0 gap-3 text-sm">
