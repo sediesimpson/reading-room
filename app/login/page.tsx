@@ -13,12 +13,6 @@ const DEMO_SLICES: Slice[] = ["a", "f", "a", "a", "f", "a", "f", "f", "a", "f"].
   })
 );
 
-const STEPS = [
-  ["add links", "anything you've been meaning to read goes on the wheel."],
-  ["spin once a day", "whoever opens the app first spins. the pick is the same for everyone."],
-  ["read and talk", "mark it as read and see who else has."],
-];
-
 // Turns Supabase's error into something friendlier.
 function explain(error: { code?: string; message: string }) {
   if (error.code === "over_email_send_rate_limit") {
@@ -60,7 +54,7 @@ function LoginForm() {
 
   if (sentTo) {
     return (
-      <div>
+      <div className="text-center">
         <h2 className="text-xl font-semibold">check your email</h2>
         <p className="mt-2 text-muted">
           we sent a link to <span className="text-ink">{sentTo}</span>. open it in this browser to
@@ -74,9 +68,9 @@ function LoginForm() {
   }
 
   return (
-    <>
+    <div className="text-center">
       <h2 className="text-xl font-semibold">log in or sign up</h2>
-      <p className="mt-2 text-muted">we&apos;ll email you a link. no password needed.</p>
+      <p className="mt-2 text-muted">we&apos;ll email you a link</p>
       <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-3 sm:flex-row">
         <input
           type="email"
@@ -97,21 +91,21 @@ function LoginForm() {
         </button>
       </form>
       {error && <p className="mt-3 text-sm text-muted">{error}</p>}
-    </>
+    </div>
   );
 }
 
 export default function LoginPage() {
   return (
     <>
-      <section className="mt-12 text-center">
+      <section className="mt-16 text-center">
         <div className="mx-auto w-[180px]">
           <Wheel slices={DEMO_SLICES} size={180} rotation={-14} />
         </div>
-        <h1 className="mt-8 text-3xl font-semibold sm:text-4xl">one article a day, read together</h1>
+        <h1 className="mt-8 text-3xl font-semibold sm:text-4xl">the reading room</h1>
         <p className="mx-auto mt-3 max-w-md text-muted">
-          a shared wheel of links for you and your friends. each day it picks one for all of you
-          to read.
+          a shared wheel of articles for you and your friends &amp; each day it picks one for you
+          to read
         </p>
       </section>
 
@@ -121,18 +115,6 @@ export default function LoginPage() {
           <LoginForm />
         </Suspense>
       </section>
-
-      <ol className="mx-auto mt-10 grid max-w-lg gap-5 sm:grid-cols-3">
-        {STEPS.map(([title, text], index) => (
-          <li key={title}>
-            <span className="flex size-7 items-center justify-center rounded-full bg-accent text-sm font-semibold">
-              {index + 1}
-            </span>
-            <p className="mt-2 font-medium">{title}</p>
-            <p className="mt-1 text-sm text-muted">{text}</p>
-          </li>
-        ))}
-      </ol>
     </>
   );
 }
