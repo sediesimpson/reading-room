@@ -4,11 +4,21 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase";
 
 // Returns the cleaned-up url, or null if it isn't a real web link.
+// Cleaning up means the same article always saves as the same text,
+// so the database can spot duplicates.
 function checkUrl(text: string): string | null {
   try {
     const url = new URL(text.trim());
     if (url.protocol !== "http:" && url.protocol !== "https:") return null;
     if (!url.hostname.includes(".")) return null;
+
+    url.hash = "";
+    for (const key of [...url.searchParams.keys()]) {
+      if (key.startsWith("utm_")) url.searchParams.delete(key);
+    }
+    if (url.pathname.length > 1 && url.pathname.endsWith("/")) {
+      url.pathname = url.pathname.slice(0, -1);
+    }
     return url.toString();
   } catch {
     return null;
@@ -33,6 +43,11 @@ export default function AddLinkForm({ onAdded }: { onAdded: () => void }) {
     const { error } = await createClient().from("links").insert({ url });
     setSaving(false);
 
+    // 23505 is Postgres saying "this would break a unique rule".
+    if (error?.code === "23505") {
+      setError("that link is already in the wheel");
+      return;
+    }
     if (error) {
       setError(`couldn't save it: ${error.message}`);
       return;
