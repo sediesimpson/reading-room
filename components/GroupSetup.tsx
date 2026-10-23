@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase";
+import { ROOM_CHANGED } from "@/components/RoomName";
 
 // Shown when you're logged in but not in a reading room yet.
 export default function GroupSetup({ onCreated }: { onCreated: () => void }) {
@@ -20,7 +21,10 @@ export default function GroupSetup({ onCreated }: { onCreated: () => void }) {
     setSaving(false);
 
     if (error) setError(error.message);
-    else onCreated();
+    else {
+      window.dispatchEvent(new Event(ROOM_CHANGED));
+      onCreated();
+    }
   }
 
   return (
