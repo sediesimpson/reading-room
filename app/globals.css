@@ -1,26 +1,24 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* The reading room palette. Each one becomes a Tailwind class,
+   e.g. bg-accent, text-ink, text-muted, border-line, rounded-card. */
+@theme {
+  --color-accent: #cfe3f7;
+  --color-friend: #b8dcc0;
+  --color-ink: #16191d;
+  --color-muted: #5f656c;
+  --color-line: #e4e7eb;
+  --radius-card: 14px;
+  --font-sans: var(--font-dm-sans);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #ffffff;
+  color: var(--color-ink);
+  text-transform: lowercase;
+}
+
+/* Keep what people type (urls) as they typed it. */
+input {
+  text-transform: none;
 }
