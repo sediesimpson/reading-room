@@ -1,36 +1,69 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { createClient } from "@/lib/supabase";
+import type { Link } from "@/lib/types";
+import AddLinkForm from "@/components/AddLinkForm";
 
-type TestRow = { id: number; message: string };
+// e.g. "friday 23 october", in South African time.
+function todayLabel() {
+  return new Intl.DateTimeFormat("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    timeZone: "Africa/Johannesburg",
+  }).format(new Date());
+}
 
-// Step 1 only: prove the page can read from Supabase.
+// The date only exists in the browser; the server render leaves it blank.
+function useToday() {
+  return useSyncExternalStore(
+    () => () => {},
+    todayLabel,
+    () => ""
+  );
+}
+
+function fetchLinks() {
+  return createClient().from("links").select("*").order("created_at");
+}
+
 export default function Home() {
-  const [rows, setRows] = useState<TestRow[]>([]);
+  const [links, setLinks] = useState<Link[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const date = useToday();
 
-  useEffect(() => {
-    const supabase = createClient();
-    supabase
-      .from("test")
-      .select("*")
-      .then(({ data, error }) => {
-        if (error) setError(error.message);
-        else setRows(data);
-      });
+  // Ask Supabase for every link, then show them once they arrive.
+  const loadLinks = useCallback(() => {
+    fetchLinks().then(({ data, error }) => {
+      if (error) setError(error.message);
+      else setLinks(data);
+    });
   }, []);
 
+  useEffect(() => {
+    loadLinks();
+  }, [loadLinks]);
+
+  const count = links?.length ?? 0;
+
   return (
-    <section className="mt-10 rounded-card border border-line p-6">
-      <h1 className="text-2xl font-semibold">connection test</h1>
-      {error && <p className="mt-3 text-muted">could not reach supabase: {error}</p>}
-      {!error && rows.length === 0 && <p className="mt-3 text-muted">loading…</p>}
-      {rows.map((row) => (
-        <p key={row.id} className="mt-3 inline-block rounded-card bg-accent px-4 py-2">
-          {row.message}
+    <>
+      <section className="mt-10 text-center">
+        <p className="text-sm text-muted">{date || " "}</p>
+        <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">
+          what are we reading today?
+        </h1>
+        <p className="mt-3 text-muted">
+          {error
+            ? `couldn't load the wheel: ${error}`
+            : links === null
+              ? "loading…"
+              : `${count} ${count === 1 ? "link" : "links"} in the wheel`}
         </p>
-      ))}
-    </section>
+      </section>
+
+      <AddLinkForm onAdded={loadLinks} />
+    </>
   );
 }
