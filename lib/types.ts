@@ -5,7 +5,8 @@ export type Link = {
   title: string | null;
   description: string | null;
   image: string | null;
-  added_by: string | null;
+  group_id: string;
+  added_by: string;
   created_at: string;
 };
 
@@ -15,6 +16,7 @@ export type DailyPick = {
   link_id: number;
   pick_date: string;
   spun_at: string;
+  group_id: string;
   spun_by: string | null;
 };
 
@@ -22,12 +24,20 @@ export type DailyPick = {
 export type Read = {
   id: number;
   link_id: number;
-  user_id: string | null;
+  user_id: string;
   read_at: string;
 };
 
-// One row of the profiles table: a display name for each of you.
+// One row of the profiles table: your name and the group you're in.
 export type Profile = {
   user_id: string;
   display_name: string;
+  group_id: string | null;
+};
+
+// One row of the groups table: a reading room.
+export type Group = {
+  id: string;
+  name: string;
+  invite_code: string;
 };

@@ -37,7 +37,10 @@ export async function proxy(request: NextRequest) {
     if (path.startsWith("/api/")) {
       return Response.json({ error: "log in first" }, { status: 401 });
     }
-    return NextResponse.redirect(new URL("/login", request.url));
+    // Remember where you were going (e.g. an invite link) for after login.
+    const login = new URL("/login", request.url);
+    if (path !== "/") login.searchParams.set("next", path + request.nextUrl.search);
+    return NextResponse.redirect(login);
   }
   if (loggedIn && path === "/login") {
     return NextResponse.redirect(new URL("/", request.url));

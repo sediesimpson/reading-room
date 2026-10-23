@@ -1,3 +1,4 @@
+import { listNames } from "@/lib/names";
 import type { Link } from "@/lib/types";
 
 // "www.theguardian.com" -> "theguardian.com"
@@ -5,24 +6,30 @@ function publicationOf(url: string) {
   return new URL(url).hostname.replace(/^www\./, "");
 }
 
-function readLine(readByMe: boolean, readByFriend: boolean, friendName: string) {
-  if (readByMe && readByFriend) return "you've both read it";
-  if (readByMe) return `you've read it. waiting on ${friendName}.`;
-  if (readByFriend) return `${friendName} has read it`;
+function readLine(readByMe: boolean, othersRead: string[], othersWaiting: string[]) {
+  if (readByMe && othersWaiting.length === 0) {
+    if (othersRead.length === 0) return "you've read it";
+    return othersRead.length === 1 ? "you've both read it" : "you've all read it";
+  }
+  if (readByMe) return `you've read it. waiting on ${listNames(othersWaiting)}.`;
+  if (othersRead.length > 0) {
+    return `${listNames(othersRead)} ${othersRead.length === 1 ? "has" : "have"} read it`;
+  }
   return "nobody has read it yet";
 }
 
 export default function TodayCard({
   link,
   readByMe,
-  readByFriend,
-  friendName,
+  othersRead,
+  othersWaiting,
   onMarkRead,
 }: {
   link: Link;
   readByMe: boolean;
-  readByFriend: boolean;
-  friendName: string;
+  // Names of the others in your room who have and haven't read it.
+  othersRead: string[];
+  othersWaiting: string[];
   onMarkRead: () => void;
 }) {
   const publication = publicationOf(link.url);
@@ -56,7 +63,7 @@ export default function TodayCard({
         </button>
       </div>
 
-      <p className="mt-4 text-sm text-muted">{readLine(readByMe, readByFriend, friendName)}</p>
+      <p className="mt-4 text-sm text-muted">{readLine(readByMe, othersRead, othersWaiting)}</p>
     </article>
   );
 }

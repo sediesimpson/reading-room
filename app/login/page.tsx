@@ -6,9 +6,6 @@ import { createClient } from "@/lib/supabase";
 
 // Turns Supabase's error into something friendlier.
 function explain(error: { code?: string; message: string }) {
-  if (error.code === "otp_disabled" || /signups not allowed/i.test(error.message)) {
-    return "that email isn't on the list. only the two of you can log in.";
-  }
   if (error.code === "over_email_send_rate_limit") {
     return "too many emails just now. wait a few minutes and try again.";
   }
@@ -16,7 +13,10 @@ function explain(error: { code?: string; message: string }) {
 }
 
 function LoginForm() {
-  const linkFailed = useSearchParams().get("error") === "link";
+  const searchParams = useSearchParams();
+  const linkFailed = searchParams.get("error") === "link";
+  // Set when you were on your way somewhere, like an invite link.
+  const next = searchParams.get("next");
   const [email, setEmail] = useState("");
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(
@@ -31,9 +31,11 @@ function LoginForm() {
     const { error } = await createClient().auth.signInWithOtp({
       email: email.trim(),
       options: {
-        // Never make a new account here: only the two existing users get in.
-        shouldCreateUser: false,
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        // A new email gets an account the first time it logs in.
+        shouldCreateUser: true,
+        emailRedirectTo:
+          `${window.location.origin}/auth/callback` +
+          (next ? `?next=${encodeURIComponent(next)}` : ""),
       },
     });
     setSending(false);
