@@ -4,6 +4,17 @@ export type Slice = { id: number; color: string };
 // How wide the white gap between slices is, in degrees.
 const GAP = 1.2;
 
+// How long the spin takes, and how it slows down at the end.
+const SPIN = "transform 4.5s cubic-bezier(0.15, 0.85, 0.25, 1)";
+
+// The rotation that puts slice `index` under the pointer at the top.
+// The slice's centre sits at (index + 0.5) x slice size, so turning the
+// wheel by 360 - centre brings that centre round to 0deg.
+export function landingAngle(index: number, count: number) {
+  const centre = (index + 0.5) * (360 / count);
+  return 360 - centre;
+}
+
 // Builds the CSS conic-gradient: each slice gets a start and end angle,
 // with half a white gap at each edge. 0deg is the top, going clockwise.
 function gradientFor(slices: Slice[]) {
@@ -27,9 +38,15 @@ function gradientFor(slices: Slice[]) {
 export default function Wheel({
   slices,
   size = 340,
+  rotation = 0,
+  animate = false,
+  onSpinEnd,
 }: {
   slices: Slice[];
   size?: number;
+  rotation?: number;
+  animate?: boolean;
+  onSpinEnd?: () => void;
 }) {
   const small = size < 200;
 
@@ -38,10 +55,15 @@ export default function Wheel({
       className="relative mx-auto aspect-square"
       style={{ width: `min(${size}px, 100%)` }}
     >
-      {/* The coloured disc. */}
+      {/* The coloured disc. Only this part turns. */}
       <div
         className="absolute inset-0 rounded-full"
-        style={{ background: gradientFor(slices) }}
+        style={{
+          background: gradientFor(slices),
+          transform: `rotate(${rotation}deg)`,
+          transition: animate ? SPIN : "none",
+        }}
+        onTransitionEnd={onSpinEnd}
       />
 
       {/* The white circle in the middle, showing the count. */}
