@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { createClient } from "@/lib/supabase";
 import type { Link } from "@/lib/types";
 import AddLinkForm from "@/components/AddLinkForm";
+import Wheel, { type Slice } from "@/components/Wheel";
 
 // e.g. "friday 23 october", in South African time.
 function todayLabel() {
@@ -46,6 +47,11 @@ export default function Home() {
   }, [loadLinks]);
 
   const count = links?.length ?? 0;
+  // For now every slice is pale blue. Step 7 colours them by who added them.
+  const slices: Slice[] = (links ?? []).map((link) => ({
+    id: link.id,
+    color: "var(--color-accent)",
+  }));
 
   return (
     <>
@@ -62,6 +68,10 @@ export default function Home() {
               : `${count} ${count === 1 ? "link" : "links"} in the wheel`}
         </p>
       </section>
+
+      <div className="mt-8">
+        <Wheel slices={slices} />
+      </div>
 
       <AddLinkForm onAdded={loadLinks} />
     </>
