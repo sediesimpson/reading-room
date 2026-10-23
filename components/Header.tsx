@@ -1,5 +1,5 @@
 import Link from "next/link";
-import LogoutButton from "@/components/LogoutButton";
+import HeaderNav from "@/components/HeaderNav";
 import RoomName from "@/components/RoomName";
 
 export default function Header() {
@@ -11,16 +11,7 @@ export default function Header() {
         </Link>
         <RoomName />
       </div>
-      <nav className="flex shrink-0 gap-5 text-sm text-muted">
-        <Link href="/" className="hover:text-ink">
-          today
-        </Link>
-        {/* The past reads page is a bonus for later. */}
-        <Link href="/past-reads" className="hover:text-ink">
-          past reads
-        </Link>
-        <LogoutButton />
-      </nav>
+      <HeaderNav />
     </header>
   );
 }
