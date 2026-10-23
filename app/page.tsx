@@ -202,6 +202,11 @@ export default function Home() {
       {showArticle ? (
         <>
           <section className="mt-10">
+            {data?.group && (
+              <p className="mb-3 inline-block rounded-full bg-accent px-3 py-1 text-sm font-medium">
+                {data.group.name}
+              </p>
+            )}
             <p className="text-sm text-muted">{date || " "}</p>
             <h1 className="mt-2 text-3xl font-semibold">today&apos;s read</h1>
           </section>
@@ -232,6 +237,11 @@ export default function Home() {
       ) : (
         <>
           <section className="mt-10 text-center">
+            {data?.group && (
+              <p className="mb-3 inline-block rounded-full bg-accent px-3 py-1 text-sm font-medium">
+                {data.group.name}
+              </p>
+            )}
             <p className="text-sm text-muted">{date || " "}</p>
             <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">
               what are we reading today?
