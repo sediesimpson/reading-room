@@ -9,6 +9,7 @@ import GroupSetup from "@/components/GroupSetup";
 import InviteBox from "@/components/InviteBox";
 import NamePrompt from "@/components/NamePrompt";
 import TodayCard from "@/components/TodayCard";
+import YourLinks from "@/components/YourLinks";
 import Wheel, { landingAngle, type Slice } from "@/components/Wheel";
 
 // How many full turns the wheel makes before it lands.
@@ -117,7 +118,10 @@ export default function Home() {
     id: link.id,
     color: link.added_by === me ? "var(--color-accent)" : "var(--color-friend)",
   }));
-  const fromMe = wheelLinks.filter((link) => link.added_by === me).length;
+  const myLinks = wheelLinks.filter((link) => link.added_by === me);
+  const fromMe = myLinks.length;
+  // Links that have been picked on any day can't be edited or deleted.
+  const pickedIds = new Set(data?.picks.map((pick) => pick.link_id));
   const fromOthers = wheelLinks.length - fromMe;
   const linkCount = `${slices.length} ${slices.length === 1 ? "link" : "links"}`;
   const countLine =
@@ -259,6 +263,7 @@ export default function Home() {
       {error && <p className="mt-4 text-center text-sm text-muted">{error}</p>}
 
       <AddLinkForm onAdded={loadData} />
+      <YourLinks links={myLinks} pickedIds={pickedIds} onChanged={loadData} />
       {data?.group && <InviteBox group={data.group} />}
     </>
   );
