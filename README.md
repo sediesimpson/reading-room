@@ -4,6 +4,10 @@ a shared reading wheel for you and your friends. everyone in a room adds links, 
 
 **try it at [read.sedinam.com](https://read.sedinam.com).** sign up with your email, start a room and send the invite link to a friend.
 
+<p align="center">
+  <img src="docs/login.png" alt="the reading room login page: a wheel of pale blue and green slices above a sign-up box" width="600">
+</p>
+
 - each link is one slice of the wheel. your own links are pale blue and everyone else's are green, however many people are in the room.
 - you can't see other people's titles until their link is picked.
 - the first person to open the app each day spins. the pick is locked for everyone until tomorrow.
@@ -69,6 +73,10 @@ the rules about who can see what live in the database, not in the page:
 
 ## how this was made
 
-this app was built entirely by prompting [claude code](https://claude.com/claude-code). i didn't write any of the code by hand. it was a test of my prompting: how far a clear plan and good direction can take a real, deployed app.
+this app was built entirely by prompting claude, using claude opus 5.5 throughout. i didn't write any of the code by hand. it was a test of my prompting: how far good direction can take a real, deployed app.
 
-i wrote the build plan and the design, then worked through it one step at a time: deciding what to build, reviewing each change, testing it in the browser, and redirecting when something wasn't right. some of the bigger decisions came out of that back-and-forth, like switching from a two-person allowlist to rooms anyone can start.
+- **claude chat:** shaping the idea and the build plan, going back and forth on what to build.
+- **claude design:** the look and every screen.
+- **[claude code](https://claude.com/claude-code):** building it one step at a time, with me reviewing each change, testing it in the browser, and redirecting when something wasn't right.
+
+some of the bigger decisions came out of that back-and-forth, like switching from a two-person allowlist to rooms anyone can start.
