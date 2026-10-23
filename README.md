@@ -73,7 +73,7 @@ the rules about who can see what live in the database, not in the page:
 
 ## how this was made
 
-this app was built entirely by prompting claude, using claude opus 5.5 throughout. i didn't write any of the code by hand. it was a test of my prompting: how far good direction can take a real, deployed app.
+this app was built entirely by prompting claude, using claude opus 5.5 throughout. it was a test of my prompting: how far good direction can take a real, deployed app.
 
 - **claude chat:** shaping the idea and the build plan, going back and forth on what to build.
 - **claude design:** the look and every screen.
