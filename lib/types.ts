@@ -12,3 +12,11 @@ export type DailyPick = {
   pick_date: string;
   spun_at: string;
 };
+
+// One row of the reads table: someone marked a link as read.
+export type Read = {
+  id: number;
+  link_id: number;
+  user_id: string | null;
+  read_at: string;
+};

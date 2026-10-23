@@ -15,3 +15,13 @@ export function todayLabel() {
     timeZone: TIME_ZONE,
   }).format(new Date());
 }
+
+// e.g. "07:42", for a timestamp from the database.
+export function timeLabel(timestamp: string) {
+  return new Intl.DateTimeFormat("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: TIME_ZONE,
+  }).format(new Date(timestamp));
+}
