@@ -29,8 +29,6 @@ a shared reading wheel for you and your friends. everyone in a room adds links, 
    ```
 
 3. set up the database: run each file in `supabase/` in the supabase sql editor, in order from `01` to `08`.
-   - `00_*` files are a throwaway connection test from step 1; skip them.
-   - `dev_reset.sql` deletes every link, pick and read. it's for testing only.
 
 4. set up login in supabase → authentication:
    - **sign in / providers:** turn email on, and allow new users to sign up.
