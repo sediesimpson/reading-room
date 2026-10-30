@@ -1,9 +1,9 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useState } from "react";
-import NextLink from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase";
+import { ROOM_CHANGED } from "@/lib/rooms";
 import type { Profile } from "@/lib/types";
 import NamePrompt from "@/components/NamePrompt";
 
@@ -44,8 +44,9 @@ function JoinRoom() {
     setError(null);
     const { error } = await createClient().rpc("join_group", { code });
     setJoining(false);
-    if (error) setError(error.message);
-    else router.push("/");
+    if (error) return setError(error.message);
+    window.dispatchEvent(new Event(ROOM_CHANGED));
+    router.push("/");
   }
 
   if (error && !data) return <p className="mt-16 text-center text-muted">{error}</p>;
@@ -61,18 +62,6 @@ function JoinRoom() {
 
   // Name first, so the room knows who you are.
   if (!data.profile) return <NamePrompt onSaved={loadData} />;
-
-  if (data.profile.group_id) {
-    return (
-      <section className="mx-auto mt-16 max-w-md">
-        <h1 className="text-3xl font-semibold">you&apos;re already in a reading room</h1>
-        <p className="mt-3 text-muted">for now, each person can be in one room.</p>
-        <NextLink href="/" className="mt-6 inline-block underline">
-          go to your wheel
-        </NextLink>
-      </section>
-    );
-  }
 
   return (
     <section className="mx-auto mt-16 max-w-md">

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import HeaderNav from "@/components/HeaderNav";
-import RoomName from "@/components/RoomName";
+import RoomMenu from "@/components/RoomMenu";
 
 export default function Header() {
   // The login page has its own big title instead.
@@ -15,7 +15,7 @@ export default function Header() {
         <Link href="/" className="shrink-0 font-semibold">
           the reading room
         </Link>
-        <RoomName />
+        <RoomMenu />
       </div>
       <HeaderNav />
     </header>

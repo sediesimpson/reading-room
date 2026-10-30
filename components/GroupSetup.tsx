@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase";
-import { ROOM_CHANGED } from "@/components/RoomName";
+import { ROOM_CHANGED } from "@/lib/rooms";
 
 // Shown when you're logged in but not in a reading room yet.
 export default function GroupSetup({ onCreated }: { onCreated: () => void }) {

@@ -6,7 +6,8 @@ import { createClient } from "@/lib/supabase";
 import { pickDateLabel, todayIso } from "@/lib/dates";
 import { publicationOf } from "@/lib/links";
 import { listNames } from "@/lib/names";
-import type { DailyPick, Link, Profile, Read } from "@/lib/types";
+import { membersOf, ROOM_CHANGED } from "@/lib/rooms";
+import type { DailyPick, Link, Profile, Read, RoomMember } from "@/lib/types";
 
 // A pick with its link attached. Picked links can always be read in full.
 type PastPick = DailyPick & { links: Link | null };
@@ -20,11 +21,11 @@ type PastData = {
   me: string;
 };
 
-// Every earlier pick in your room, newest first, plus who read what.
+// Every earlier pick in your current room, newest first, plus who read what.
 async function fetchPastData(): Promise<PastData> {
   const supabase = createClient();
   const today = todayIso();
-  const [claims, picks, reads, profiles] = await Promise.all([
+  const [claims, picks, reads, profiles, memberships] = await Promise.all([
     supabase.auth.getClaims(),
     supabase
       .from("daily_picks")
@@ -33,8 +34,9 @@ async function fetchPastData(): Promise<PastData> {
       .order("pick_date", { ascending: false }),
     supabase.from("reads").select("*"),
     supabase.from("profiles").select("*"),
+    supabase.from("room_members").select("*"),
   ]);
-  for (const result of [picks, reads, profiles]) {
+  for (const result of [picks, reads, profiles, memberships]) {
     if (result.error) throw result.error;
   }
   const me = claims.data?.claims.sub;
@@ -44,9 +46,7 @@ async function fetchPastData(): Promise<PastData> {
   return {
     picks: picks.data! as PastPick[],
     reads: reads.data!,
-    members: profiles.data!.filter(
-      (profile) => myProfile?.group_id && profile.group_id === myProfile.group_id
-    ),
+    members: membersOf(myProfile?.group_id, profiles.data!, memberships.data! as RoomMember[]),
     inRoom: Boolean(myProfile?.group_id),
     today,
     me,
@@ -72,9 +72,14 @@ export default function PastReadsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchPastData()
-      .then(setData)
-      .catch((error) => setError(`couldn't load past reads: ${error.message}`));
+    const load = () =>
+      fetchPastData()
+        .then(setData)
+        .catch((error) => setError(`couldn't load past reads: ${error.message}`));
+    load();
+    // Switching rooms from the header shows that room's past reads.
+    window.addEventListener(ROOM_CHANGED, load);
+    return () => window.removeEventListener(ROOM_CHANGED, load);
   }, []);
 
   return (

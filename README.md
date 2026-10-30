@@ -12,6 +12,7 @@ a shared reading wheel for you and your friends. everyone in a room adds links, 
 - you can't see other people's titles until their link is picked.
 - the first person to open the app each day spins. the pick is locked for everyone until tomorrow.
 - mark the article as read to see who else has. a link leaves the wheel once everyone has read it.
+- you can be in several rooms and switch between them from the header.
 
 ## stack
 
@@ -34,7 +35,7 @@ a shared reading wheel for you and your friends. everyone in a room adds links, 
    NEXT_PUBLIC_SUPABASE_ANON_KEY=...
    ```
 
-3. set up the database: run each file in `supabase/` in the supabase sql editor, in order from `01` to `08`.
+3. set up the database: run each file in `supabase/` in the supabase sql editor, in order from `01` to `09`.
 
 4. set up login in supabase → authentication:
    - **sign in / providers:** turn email on, and allow new users to sign up.
@@ -59,15 +60,15 @@ every push to `main` then updates the live site.
 | --- | --- |
 | `app/page.tsx` | the homepage: the wheel and spin before today's pick, the article card after it |
 | `app/login/`, `app/auth/callback/` | magic-link login |
-| `app/join/` | joining a room from an invite link |
+| `app/join/`, `app/rooms/new/` | joining a room from an invite link, and starting a new one |
 | `app/api/fetch-title/` | server route that reads an article's title, description and image |
 | `proxy.ts` | keeps the login fresh and sends logged-out visitors to `/login` |
-| `components/` | the wheel, today's card, your links, the invite box and the header |
+| `components/` | the wheel, today's card, your links, the invite box, the room menu and the header |
 | `supabase/` | every table, rule and database function, in the order they were added |
 
 the rules about who can see what live in the database, not in the page:
 
-- **rooms:** row level security limits every table to your own room.
+- **rooms:** row level security limits every table to the rooms you're a member of, and the page shows one room at a time.
 - **secret titles:** other people's unpicked links come back only as bare slices, from `wheel_slices()`, with no url or title.
 - **the daily pick:** `spin()` runs in the database, and a unique rule allows one pick per room per day. if two people spin at once, only one pick is saved and both see it.
 

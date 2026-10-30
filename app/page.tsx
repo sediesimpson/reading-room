@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { createClient } from "@/lib/supabase";
 import { timeLabel, todayIso, todayLabel } from "@/lib/dates";
-import type { DailyPick, Group, Link, Profile, Read, WheelSlice } from "@/lib/types";
+import { membersOf, ROOM_CHANGED } from "@/lib/rooms";
+import type { DailyPick, Group, Link, Profile, Read, RoomMember, WheelSlice } from "@/lib/types";
 import AddLinkForm from "@/components/AddLinkForm";
 import GroupSetup from "@/components/GroupSetup";
 import InviteBox from "@/components/InviteBox";
@@ -33,9 +34,9 @@ type PageData = {
   links: Link[];
   picks: DailyPick[];
   reads: Read[];
-  // Everyone in your room, you included.
+  // Everyone in your current room, you included.
   members: Profile[];
-  // You, and your room (null until you set a name and join one).
+  // You, and your current room (null until you set a name and join one).
   myProfile: Profile | null;
   group: Group | null;
   today: string;
@@ -43,11 +44,12 @@ type PageData = {
   me: string;
 };
 
-// Fetches who's logged in, plus your room's links, picks, reads and people.
-// The database's rules only ever send back rows from your own room.
+// Fetches who's logged in, plus your current room's links, picks, reads and
+// people. The database's rules only send back rows from your current room
+// (and, for rooms and memberships, the other rooms you're in).
 async function fetchPageData(): Promise<PageData> {
   const supabase = createClient();
-  const [claims, wheel, links, picks, reads, profiles, groups] = await Promise.all([
+  const [claims, wheel, links, picks, reads, profiles, groups, memberships] = await Promise.all([
     supabase.auth.getClaims(),
     supabase.rpc("wheel_slices"),
     supabase.from("links").select("*").order("created_at"),
@@ -55,8 +57,9 @@ async function fetchPageData(): Promise<PageData> {
     supabase.from("reads").select("*"),
     supabase.from("profiles").select("*"),
     supabase.from("groups").select("*"),
+    supabase.from("room_members").select("*"),
   ]);
-  for (const result of [wheel, links, picks, reads, profiles, groups]) {
+  for (const result of [wheel, links, picks, reads, profiles, groups, memberships]) {
     if (result.error) throw result.error;
   }
   const me = claims.data?.claims.sub;
@@ -68,27 +71,28 @@ async function fetchPageData(): Promise<PageData> {
     links: links.data!,
     picks: picks.data!,
     reads: reads.data!,
-    members: profiles.data!.filter(
-      (profile) => myProfile?.group_id && profile.group_id === myProfile.group_id
-    ),
+    members: membersOf(myProfile?.group_id, profiles.data!, memberships.data! as RoomMember[]),
     myProfile,
-    group: groups.data![0] ?? null,
+    group: groups.data!.find((group) => group.id === myProfile?.group_id) ?? null,
     today: todayIso(),
     me,
   };
 }
 
-function readCount(reads: Read[], linkId: number) {
-  return reads.filter((read) => read.link_id === linkId).length;
+// How many of the room's current members have read a link. Reads by
+// people who've since left the room don't count.
+function readCount(reads: Read[], linkId: number, members: Profile[]) {
+  const memberIds = new Set(members.map((member) => member.user_id));
+  return reads.filter((read) => read.link_id === linkId && memberIds.has(read.user_id)).length;
 }
 
-// The wheel holds every link that not everyone has read yet.
+// The wheel holds every link that not everyone in the room has read yet.
 // Today's pick always stays on, so the small wheel can stop on it.
 function linksOnWheel({ wheel, picks, reads, members, today }: PageData) {
   const todayPick = picks.find((pick) => pick.pick_date === today);
   const everyone = Math.max(members.length, 1);
   return wheel.filter(
-    (slice) => slice.id === todayPick?.link_id || readCount(reads, slice.id) < everyone
+    (slice) => slice.id === todayPick?.link_id || readCount(reads, slice.id, members) < everyone
   );
 }
 
@@ -108,6 +112,15 @@ export default function Home() {
 
   useEffect(() => {
     loadData();
+    // Switching rooms from the header: start over with the new room's wheel.
+    const onRoomChanged = () => {
+      setSpinTo(null);
+      setLanded(false);
+      setError(null);
+      loadData();
+    };
+    window.addEventListener(ROOM_CHANGED, onRoomChanged);
+    return () => window.removeEventListener(ROOM_CHANGED, onRoomChanged);
   }, [loadData]);
 
   const wheelLinks = data ? linksOnWheel(data) : [];

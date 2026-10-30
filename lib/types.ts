@@ -28,10 +28,11 @@ export type Read = {
   read_at: string;
 };
 
-// One row of the profiles table: your name and the group you're in.
+// One row of the profiles table: your name and the room you're looking at.
 export type Profile = {
   user_id: string;
   display_name: string;
+  // Your current room (you can be a member of several).
   group_id: string | null;
 };
 
@@ -47,4 +48,11 @@ export type WheelSlice = {
   id: number;
   added_by: string;
   created_at: string;
+};
+
+// One row of the room_members table: someone belongs to a room.
+export type RoomMember = {
+  group_id: string;
+  user_id: string;
+  joined_at: string;
 };
