@@ -11,7 +11,8 @@ a shared reading wheel for you and your friends. everyone in a room adds links, 
 - each link is one slice of the wheel. your own links are pale blue and everyone else's are green, however many people are in the room.
 - you can't see other people's titles until their link is picked.
 - the first person to open the app each day spins. the pick is locked for everyone until tomorrow.
-- mark the article as read to see who else has. a link leaves the wheel once everyone has read it.
+- each spin picks a random person first, then one of their links, so everyone has the same chance however many links they've added.
+- mark the article as read to see who else has. a link leaves the wheel once anyone in the room has read it.
 - you can be in several rooms and switch between them from the header.
 
 ## stack
@@ -35,7 +36,7 @@ a shared reading wheel for you and your friends. everyone in a room adds links, 
    NEXT_PUBLIC_SUPABASE_ANON_KEY=...
    ```
 
-3. set up the database: run each file in `supabase/` in the supabase sql editor, in order from `01` to `09`.
+3. set up the database: run each file in `supabase/` in the supabase sql editor, in order from `01` to `10`.
 
 4. set up login in supabase → authentication:
    - **sign in / providers:** turn email on, and allow new users to sign up.

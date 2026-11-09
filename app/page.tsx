@@ -79,20 +79,26 @@ async function fetchPageData(): Promise<PageData> {
   };
 }
 
-// How many of the room's current members have read a link. Reads by
-// people who've since left the room don't count.
-function readCount(reads: Read[], linkId: number, members: Profile[]) {
-  const memberIds = new Set(members.map((member) => member.user_id));
-  return reads.filter((read) => read.link_id === linkId && memberIds.has(read.user_id)).length;
+// Deals the slices out one person at a time, so nobody's links sit in a block.
+function takeTurns(slices: WheelSlice[]) {
+  const byPerson = new Map<string, WheelSlice[]>();
+  for (const slice of slices) {
+    byPerson.set(slice.added_by, [...(byPerson.get(slice.added_by) ?? []), slice]);
+  }
+  const piles = [...byPerson.values()];
+  const longest = Math.max(0, ...piles.map((pile) => pile.length));
+  return Array.from({ length: longest }, (_, turn) =>
+    piles.flatMap((pile) => (turn < pile.length ? [pile[turn]] : []))
+  ).flat();
 }
 
-// The wheel holds every link that not everyone in the room has read yet.
+// The wheel holds every link nobody has read yet.
 // Today's pick always stays on, so the small wheel can stop on it.
-function linksOnWheel({ wheel, picks, reads, members, today }: PageData) {
+function linksOnWheel({ wheel, picks, reads, today }: PageData) {
   const todayPick = picks.find((pick) => pick.pick_date === today);
-  const everyone = Math.max(members.length, 1);
-  return wheel.filter(
-    (slice) => slice.id === todayPick?.link_id || readCount(reads, slice.id, members) < everyone
+  const readIds = new Set(reads.map((read) => read.link_id));
+  return takeTurns(
+    wheel.filter((slice) => slice.id === todayPick?.link_id || !readIds.has(slice.id))
   );
 }
 
